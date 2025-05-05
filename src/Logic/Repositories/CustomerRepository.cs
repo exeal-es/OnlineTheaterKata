@@ -1,35 +1,27 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using Logic.Entities;
+﻿using Logic.Entities;
 using Logic.Utils;
 
-namespace Logic.Repositories
+namespace Logic.Repositories;
+
+public class CustomerRepository(UnitOfWork unitOfWork) : Repository<Customer>(unitOfWork)
 {
-    public class CustomerRepository : Repository<Customer>
+    public IReadOnlyList<Customer> GetList()
     {
-        public CustomerRepository(UnitOfWork unitOfWork)
-            : base(unitOfWork)
-        {
-        }
+        return _unitOfWork
+            .Query<Customer>()
+            .ToList()
+            .Select(x =>
+            {
+                x.PurchasedMovies = null;
+                return x;
+            })
+            .ToList();
+    }
 
-        public IReadOnlyList<Customer> GetList()
-        {
-            return _unitOfWork
-                .Query<Customer>()
-                .ToList()
-                .Select(x =>
-                {
-                    x.PurchasedMovies = null;
-                    return x;
-                })
-                .ToList();
-        }
-
-        public Customer GetByEmail(string email)
-        {
-            return _unitOfWork
-                .Query<Customer>()
-                .SingleOrDefault(x => x.Email == email);
-        }
+    public Customer GetByEmail(string email)
+    {
+        return _unitOfWork
+            .Query<Customer>()
+            .SingleOrDefault(x => x.Email == email);
     }
 }

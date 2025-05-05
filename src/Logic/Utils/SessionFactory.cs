@@ -8,86 +8,80 @@ using FluentNHibernate.Conventions.Instances;
 using FluentNHibernate.Mapping;
 using NHibernate;
 
-namespace Logic.Utils
+namespace Logic.Utils;
+
+public class SessionFactory(string connectionString)
 {
-    public class SessionFactory
+    private readonly ISessionFactory _factory = BuildSessionFactory(connectionString);
+
+    internal ISession OpenSession()
     {
-        private readonly ISessionFactory _factory;
+        return _factory.OpenSession();
+    }
 
-        public SessionFactory(string connectionString)
+    private static ISessionFactory BuildSessionFactory(string connectionString)
+    {
+        FluentConfiguration configuration = Fluently.Configure()
+            .Database(SQLiteConfiguration.Standard.ConnectionString(connectionString))
+            .Mappings(m => m.FluentMappings
+                .AddFromAssembly(Assembly.GetExecutingAssembly())
+                .Conventions.Add(
+                    ForeignKey.EndsWith("ID"),
+                    ConventionBuilder.Property.When(criteria => criteria.Expect(x => x.Nullable, Is.Not.Set), x => x.Not.Nullable()))
+                .Conventions.Add<OtherConversions>()
+                .Conventions.Add<TableNameConvention>()
+                .Conventions.Add<HiLoConvention>()
+            );
+
+        var sessionFactory = configuration.BuildSessionFactory();
+
+        // Create the database schema
+        using (var session = sessionFactory.OpenSession())
+        using (var transaction = session.BeginTransaction())
         {
-            _factory = BuildSessionFactory(connectionString);
+            var schema = new NHibernate.Tool.hbm2ddl.SchemaExport(configuration.BuildConfiguration());
+            schema.Execute(true, true, false, session.Connection, null);
+            transaction.Commit();
         }
 
-        internal ISession OpenSession()
+        return sessionFactory;
+    }
+
+
+    private class OtherConversions : IHasManyConvention, IReferenceConvention
+    {
+        public void Apply(IOneToManyCollectionInstance instance)
         {
-            return _factory.OpenSession();
+            instance.LazyLoad();
+            instance.AsBag();
+            instance.Cascade.SaveUpdate();
+            instance.Inverse();
         }
 
-        private static ISessionFactory BuildSessionFactory(string connectionString)
+        public void Apply(IManyToOneInstance instance)
         {
-            FluentConfiguration configuration = Fluently.Configure()
-                .Database(SQLiteConfiguration.Standard.ConnectionString(connectionString))
-                .Mappings(m => m.FluentMappings
-                    .AddFromAssembly(Assembly.GetExecutingAssembly())
-                    .Conventions.Add(
-                        ForeignKey.EndsWith("ID"),
-                        ConventionBuilder.Property.When(criteria => criteria.Expect(x => x.Nullable, Is.Not.Set), x => x.Not.Nullable()))
-                    .Conventions.Add<OtherConversions>()
-                    .Conventions.Add<TableNameConvention>()
-                    .Conventions.Add<HiLoConvention>()
-                );
-
-            var sessionFactory = configuration.BuildSessionFactory();
-
-            // Create the database schema
-            using (var session = sessionFactory.OpenSession())
-            using (var transaction = session.BeginTransaction())
-            {
-                var schema = new NHibernate.Tool.hbm2ddl.SchemaExport(configuration.BuildConfiguration());
-                schema.Execute(true, true, false, session.Connection, null);
-                transaction.Commit();
-            }
-
-            return sessionFactory;
+            instance.LazyLoad(Laziness.Proxy);
+            instance.Cascade.None();
+            instance.Not.Nullable();
         }
+    }
 
 
-        private class OtherConversions : IHasManyConvention, IReferenceConvention
+    public class TableNameConvention : IClassConvention
+    {
+        public void Apply(IClassInstance instance)
         {
-            public void Apply(IOneToManyCollectionInstance instance)
-            {
-                instance.LazyLoad();
-                instance.AsBag();
-                instance.Cascade.SaveUpdate();
-                instance.Inverse();
-            }
-
-            public void Apply(IManyToOneInstance instance)
-            {
-                instance.LazyLoad(Laziness.Proxy);
-                instance.Cascade.None();
-                instance.Not.Nullable();
-            }
+            instance.Table(instance.EntityType.Name);
         }
+    }
 
 
-        public class TableNameConvention : IClassConvention
+    public class HiLoConvention : IIdConvention
+    {
+        public void Apply(IIdentityInstance instance)
         {
-            public void Apply(IClassInstance instance)
-            {
-                instance.Table(instance.EntityType.Name);
-            }
-        }
-
-
-        public class HiLoConvention : IIdConvention
-        {
-            public void Apply(IIdentityInstance instance)
-            {
-                instance.Column(instance.EntityType.Name + "ID");
-                instance.GeneratedBy.Native();
-            }
+            instance.Column(instance.EntityType.Name + "ID");
+            instance.GeneratedBy.Native();
         }
     }
 }
