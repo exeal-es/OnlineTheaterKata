@@ -8,8 +8,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
 {
+    [ApiController]
     [Route("api/[controller]")]
-    public class CustomersController : Controller
+    public class CustomersController : ControllerBase
     {
         private readonly MovieRepository _movieRepository;
         private readonly CustomerRepository _customerRepository;
@@ -22,9 +23,10 @@ namespace Api.Controllers
             _customerService = customerService;
         }
 
-        [HttpGet]
-        [Route("{id}")]
-        public IActionResult Get(long id)
+        [HttpGet("{id}")]
+        [ProducesResponseType(typeof(Customer), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult<Customer> Get(long id)
         {
             Customer customer = _customerRepository.GetById(id);
             if (customer == null)
@@ -32,17 +34,21 @@ namespace Api.Controllers
                 return NotFound();
             }
 
-            return Json(customer);
+            return Ok(customer);
         }
 
         [HttpGet]
-        public JsonResult GetList()
+        [ProducesResponseType(typeof(IReadOnlyList<Customer>), StatusCodes.Status200OK)]
+        public ActionResult<IReadOnlyList<Customer>> GetList()
         {
             IReadOnlyList<Customer> customers = _customerRepository.GetList();
-            return Json(customers);
+            return Ok(customers);
         }
 
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public IActionResult Create([FromBody] Customer item)
         {
             try
@@ -70,8 +76,10 @@ namespace Api.Controllers
             }
         }
 
-        [HttpPut]
-        [Route("{id}")]
+        [HttpPut("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public IActionResult Update(long id, [FromBody] Customer item)
         {
             try
@@ -98,8 +106,10 @@ namespace Api.Controllers
             }
         }
 
-        [HttpPost]
-        [Route("{id}/movies")]
+        [HttpPost("{id}/movies")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public IActionResult PurchaseMovie(long id, [FromBody] long movieId)
         {
             try
@@ -133,8 +143,10 @@ namespace Api.Controllers
             }
         }
 
-        [HttpPost]
-        [Route("{id}/promotion")]
+        [HttpPost("{id}/promotion")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public IActionResult PromoteCustomer(long id)
         {
             try
