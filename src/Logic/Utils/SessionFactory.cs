@@ -38,7 +38,18 @@ namespace Logic.Utils
                     .Conventions.Add<HiLoConvention>()
                 );
 
-            return configuration.BuildSessionFactory();
+            var sessionFactory = configuration.BuildSessionFactory();
+
+            // Create the database schema
+            using (var session = sessionFactory.OpenSession())
+            using (var transaction = session.BeginTransaction())
+            {
+                var schema = new NHibernate.Tool.hbm2ddl.SchemaExport(configuration.BuildConfiguration());
+                schema.Execute(true, true, false, session.Connection, null);
+                transaction.Commit();
+            }
+
+            return sessionFactory;
         }
 
 
