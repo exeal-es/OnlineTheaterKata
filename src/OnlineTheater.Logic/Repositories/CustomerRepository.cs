@@ -1,27 +1,44 @@
 ﻿using OnlineTheater.Logic.Entities;
-using OnlineTheater.Logic.Utils;
+using OnlineTheater.Logic.Data;
 
 namespace OnlineTheater.Logic.Repositories;
 
-public class CustomerRepository(UnitOfWork unitOfWork) : Repository<Customer>(unitOfWork)
+public class CustomerRepository(OnlineTheaterDbContext context)
 {
     public IReadOnlyList<Customer> GetList()
     {
-        return _unitOfWork
-            .Query<Customer>()
-            .ToList()
-            .Select(x =>
+        return context.Customers
+            .Select(x => new Customer
             {
-                x.PurchasedMovies = null;
-                return x;
+                Id = x.Id,
+                Name = x.Name,
+                Email = x.Email,
+                Status = x.Status,
+                StatusExpirationDate = x.StatusExpirationDate,
+                MoneySpent = x.MoneySpent,
+                PurchasedMovies = null
             })
             .ToList();
     }
 
     public Customer GetByEmail(string email)
     {
-        return _unitOfWork
-            .Query<Customer>()
-            .SingleOrDefault(x => x.Email == email);
+        return context.Customers
+            .FirstOrDefault(x => x.Email == email);
+    }
+
+    public void Add(Customer item)
+    {
+        context.Customers.Add(item);
+    }
+
+    public void SaveChanges()
+    {
+        context.SaveChanges();
+    }
+
+    public Customer GetById(long id)
+    {
+        return context.Customers.Find(id);
     }
 }

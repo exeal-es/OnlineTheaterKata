@@ -1,6 +1,4 @@
-﻿using NHibernate.Proxy;
-
-namespace OnlineTheater.Logic.Entities;
+﻿namespace OnlineTheater.Logic.Entities;
 
 public abstract class Entity
 {
@@ -16,7 +14,7 @@ public abstract class Entity
         if (ReferenceEquals(this, other))
             return true;
 
-        if (GetRealType() != other.GetRealType())
+        if (GetType() != other.GetType())
             return false;
 
         if (Id == 0 || other.Id == 0)
@@ -43,11 +41,6 @@ public abstract class Entity
 
     public override int GetHashCode()
     {
-        return (GetRealType().ToString() + Id).GetHashCode();
-    }
-
-    private Type GetRealType()
-    {
-        return NHibernateProxyHelper.GetClassWithoutInitializingProxy(this);
+        return (GetType().ToString() + Id).GetHashCode();
     }
 }

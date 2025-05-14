@@ -1,12 +1,17 @@
 ﻿using OnlineTheater.Logic.Entities;
-using OnlineTheater.Logic.Utils;
+using OnlineTheater.Logic.Data;
 
 namespace OnlineTheater.Logic.Repositories;
 
-public class MovieRepository(UnitOfWork unitOfWork) : Repository<Movie>(unitOfWork)
+public class MovieRepository(OnlineTheaterDbContext context)
 {
     public IReadOnlyList<Movie> GetList()
     {
-        return _unitOfWork.Query<Movie>().ToList();
+        return context.Movies.ToList();
+    }
+
+    public Movie GetById(long movieId)
+    {
+        return context.Movies.Find(movieId);
     }
 }

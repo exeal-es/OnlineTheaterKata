@@ -1,6 +1,7 @@
-﻿using OnlineTheater.Logic.Repositories;
+﻿using Microsoft.EntityFrameworkCore;
+using OnlineTheater.Logic.Data;
+using OnlineTheater.Logic.Repositories;
 using OnlineTheater.Logic.Services;
-using OnlineTheater.Logic.Utils;
 
 namespace OnlineTheater.Api;
 
@@ -15,20 +16,28 @@ public class Program
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
 
-        // Add NHibernate and custom services
-        builder.Services.AddSingleton<SessionFactory>(sp =>
+        // Add EF Core and custom services
+        builder.Services.AddDbContext<OnlineTheaterDbContext>((sp, options) =>
         {
             var config = sp.GetRequiredService<IConfiguration>();
             var connectionString = config["ConnectionString"];
-            return new SessionFactory(connectionString);
+            options.UseSqlite(connectionString);
         });
-        builder.Services.AddScoped<UnitOfWork>();
+        
+        // Add application services
         builder.Services.AddTransient<MovieRepository>();
         builder.Services.AddTransient<CustomerRepository>();
         builder.Services.AddTransient<MovieService>();
         builder.Services.AddTransient<CustomerService>();
 
         var app = builder.Build();
+
+        // Run migrations
+        using (var scope = app.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<OnlineTheaterDbContext>();
+            db.Database.Migrate();
+        }
 
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
@@ -45,3 +54,4 @@ public class Program
         app.Run();
     }
 }
+

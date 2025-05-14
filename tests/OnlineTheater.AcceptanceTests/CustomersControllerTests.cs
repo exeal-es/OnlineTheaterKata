@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using OnlineTheater.Api;
@@ -7,32 +8,31 @@ using OnlineTheater.Logic.Entities;
 
 namespace OnlineTheater.AcceptanceTests;
 
-public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Program>>
+public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Program>>, IDisposable
 {
     private readonly WebApplicationFactory<Program> _factory;
     private readonly HttpClient _client;
-    private const string TestDbPath = "OnlineTheater.Test.db";
+    private string _dbPath;
 
-    public CustomersControllerTests(WebApplicationFactory<Program> factory)
+    public CustomersControllerTests()
     {
-        // Delete test database if it exists
-        if (File.Exists(TestDbPath))
-        {
-            File.Delete(TestDbPath);
-        }
+        _dbPath = Path.Combine(Path.GetTempPath(), $"OnlineTheater_{Guid.NewGuid()}.db");
+        var connectionString = $"Data Source={_dbPath};";
 
-        _factory = factory.WithWebHostBuilder(builder =>
+        var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
-            builder.ConfigureAppConfiguration((context, config) =>
+            builder.UseEnvironment("Test");
+
+            builder.ConfigureAppConfiguration((context, configBuilder) =>
             {
-                config.AddInMemoryCollection(new Dictionary<string, string>
+                configBuilder.AddInMemoryCollection(new Dictionary<string, string>
                 {
-                    ["ConnectionString"] = $"Data Source={TestDbPath};Version=3;"
+                    ["ConnectionString"] = connectionString
                 });
             });
         });
 
-        _client = _factory.CreateClient();
+        _client = factory.CreateClient();
     }
 
     private async Task<long> CreateCustomerAndGetId(Customer customer)
@@ -84,8 +84,8 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
         // Act - Create customer
         var createResponse = await _client.PostAsJsonAsync("/api/customers", customer);
         
-        // If we got a 500, read and display the error details
-        if (createResponse.StatusCode == HttpStatusCode.InternalServerError)
+        // If we got an error, read and display the error details
+        if (!createResponse.IsSuccessStatusCode)
         {
             var error = await createResponse.Content.ReadAsStringAsync();
             throw new Exception($"Server error: {error}");
@@ -248,5 +248,13 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
     [Fact]
     public async Task Update_InvalidModelState_ReturnsBadRequest()
     {
+    }
+    
+    public void Dispose()
+    {
+        if (File.Exists(_dbPath))
+        {
+            try { File.Delete(_dbPath); } catch { }
+        }
     }
 } 
