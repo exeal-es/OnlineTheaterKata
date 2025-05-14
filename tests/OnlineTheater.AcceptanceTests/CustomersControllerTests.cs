@@ -237,11 +237,23 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
     [Fact]
     public async Task Create_DuplicateEmail_ReturnsBadRequest()
     {
-    }
-
-    [Fact]
-    public async Task Create_FirstCustomer_WithEmail_Success()
-    {
+        // Arrange
+        var customer = new Customer
+        {
+            Name = "John Doe",
+            Email = "duplicate.email@example.com",
+            PurchasedMovies = new List<PurchasedMovie>()
+        };
+    
+        // Crear el primer cliente con el correo electrónico
+        var createResponse1 = await _client.PostAsJsonAsync("/api/customers", customer);
+        createResponse1.EnsureSuccessStatusCode();
+    
+        // Intentar crear un segundo cliente con el mismo correo electrónico
+        var createResponse2 = await _client.PostAsJsonAsync("/api/customers", customer);
+    
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, createResponse2.StatusCode);
     }
 
     [Fact]
