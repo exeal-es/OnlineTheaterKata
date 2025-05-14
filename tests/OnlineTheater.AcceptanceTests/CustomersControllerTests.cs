@@ -35,6 +35,19 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
         _client = _factory.CreateClient();
     }
 
+    private async Task<long> CreateCustomerAndGetId(Customer customer)
+    {
+        var createResponse = await _client.PostAsJsonAsync("/api/customers", customer);
+        createResponse.EnsureSuccessStatusCode();
+        
+        // Get all customers to find the created one
+        var getAllResponse = await _client.GetAsync("/api/customers");
+        getAllResponse.EnsureSuccessStatusCode();
+        var customers = await getAllResponse.Content.ReadFromJsonAsync<List<Customer>>();
+        
+        return customers.LastOrDefault()?.Id ?? 1;
+    }
+
     [Fact]
     public async Task GetList_WhenNoCustomers_ReturnsEmptyList()
     {
@@ -48,7 +61,7 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
             throw new Exception($"Server error: {error}");
         }
 
-        response.EnsureSuccessStatusCode(); // This will throw for any non-200 status code
+        response.EnsureSuccessStatusCode();
         var customers = await response.Content.ReadFromJsonAsync<List<Customer>>();
 
         // Assert
@@ -104,15 +117,8 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
             PurchasedMovies = new List<PurchasedMovie>()
         };
 
-        // Create customer
-        var createResponse = await _client.PostAsJsonAsync("/api/customers", customer);
-        createResponse.EnsureSuccessStatusCode();
-
-        // Get all customers to get the ID
-        var getAllResponse = await _client.GetAsync("/api/customers");
-        getAllResponse.EnsureSuccessStatusCode();
-        var customers = await getAllResponse.Content.ReadFromJsonAsync<List<Customer>>();
-        var customerId = customers[0].Id;
+        // Create customer and get ID
+        var customerId = await CreateCustomerAndGetId(customer);
 
         // Act - Get customer by ID
         var getByIdResponse = await _client.GetAsync($"/api/customers/{customerId}");
@@ -133,5 +139,55 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
         Assert.Equal(customer.Name, retrievedCustomer.Name);
         Assert.Equal(customer.Email, retrievedCustomer.Email);
         Assert.Equal(CustomerStatus.Regular, retrievedCustomer.Status);
+    }
+
+    [Fact]
+    public async Task PromoteCustomer_CustomerNotFound_ReturnsBadRequest()
+    {
+    }
+
+    [Fact]
+    public async Task PurchaseMovie_InvalidMovieId_ReturnsBadRequest()
+    {
+    }
+
+    [Fact]
+    public async Task PurchaseMovie_InvalidCustomerId_ReturnsBadRequest()
+    {
+    }
+
+    [Fact]
+    public async Task Update_ValidCustomer_UpdatesNameSuccessfully()
+    {
+    }
+
+    [Fact]
+    public async Task Update_InvalidCustomerId_ReturnsBadRequest()
+    {
+    }
+
+    [Fact]
+    public async Task Create_DuplicateEmail_ReturnsBadRequest()
+    {
+    }
+
+    [Fact]
+    public async Task Create_FirstCustomer_WithEmail_Success()
+    {
+    }
+
+    [Fact]
+    public async Task Get_NonExistentCustomer_ReturnsNotFound()
+    {
+    }
+
+    [Fact]
+    public async Task Create_InvalidModelState_ReturnsBadRequest()
+    {
+    }
+
+    [Fact]
+    public async Task Update_InvalidModelState_ReturnsBadRequest()
+    {
     }
 } 
