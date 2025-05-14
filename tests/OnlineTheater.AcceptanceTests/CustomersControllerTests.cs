@@ -41,6 +41,23 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
             });
         });
 
+        // Seed the database with at least one movie
+        using (var scope = newFactory.Services.CreateScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<OnlineTheaterDbContext>();
+            context.Database.EnsureCreated();
+            
+            if (!context.Movies.Any())
+            {
+                context.Movies.Add(new Movie 
+                { 
+                    Name = "Test Movie",
+                    LicensingModel = LicensingModel.TwoDays 
+                });
+                context.SaveChanges();
+            }
+        }
+
         _client = newFactory.CreateClient();
     }
 
@@ -113,6 +130,19 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
         Assert.Equal(customer.Name, customers[0].Name);
         Assert.Equal(customer.Email, customers[0].Email);
         Assert.Equal(CustomerStatus.Regular, customers[0].Status);
+    }
+    
+    [Fact]
+    public async Task Get_NonExistentCustomer_ReturnsNotFound()
+    {
+        // Arrange
+        var nonExistentCustomerId = 999; // Un ID que no existe en la base de datos
+    
+        // Act
+        var response = await _client.GetAsync($"/api/customers/{nonExistentCustomerId}");
+    
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]
@@ -232,6 +262,20 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
     [Fact]
     public async Task Update_InvalidCustomerId_ReturnsBadRequest()
     {
+        // Arrange
+        var invalidCustomerId = -1; // ID de cliente inválido
+        var updatedCustomer = new Customer
+        {
+            Name = "Updated Name",
+            Email = "updated.email@example.com",
+            PurchasedMovies = new List<PurchasedMovie>()
+        };
+    
+        // Act
+        var response = await _client.PutAsJsonAsync($"/api/customers/{invalidCustomerId}", updatedCustomer);
+    
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     [Fact]
@@ -254,11 +298,6 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
     
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, createResponse2.StatusCode);
-    }
-
-    [Fact]
-    public async Task Get_NonExistentCustomer_ReturnsNotFound()
-    {
     }
 
     [Fact]
