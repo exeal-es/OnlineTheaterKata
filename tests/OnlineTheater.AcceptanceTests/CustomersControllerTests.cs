@@ -333,4 +333,32 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
         Assert.NotNull(updatedCustomer);
         Assert.Contains(updatedCustomer.PurchasedMovies, pm => pm.MovieId == movieId);
     }
+    
+    [Fact]
+    public async Task PurchaseMovie_AlreadyPurchased_ReturnsBadRequest()
+    {
+        // Arrange
+        var customer = new Customer
+        {
+            Name = "John Doe",
+            Email = "john.doe@example.com",
+            PurchasedMovies = new List<PurchasedMovie>()
+        };
+
+        // Crear un cliente válido y obtener su ID
+        var customerId = await CreateCustomerAndGetId(customer);
+
+        // Obtener el ID de una película existente
+        var movieId = _movieId;
+
+        // Act - Comprar la película por primera vez
+        var firstPurchaseResponse = await _client.PostAsJsonAsync($"/api/customers/{customerId}/movies", movieId);
+        firstPurchaseResponse.EnsureSuccessStatusCode();
+
+        // Act - Intentar comprar la misma película nuevamente
+        var secondPurchaseResponse = await _client.PostAsJsonAsync($"/api/customers/{customerId}/movies", movieId);
+
+        // Assert - Verificar que la segunda compra devuelve BadRequest
+        Assert.Equal(HttpStatusCode.BadRequest, secondPurchaseResponse.StatusCode);
+    }
 } 
