@@ -16,13 +16,8 @@ public class Program
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
 
-        // Add EF Core and custom services
-        builder.Services.AddDbContext<OnlineTheaterDbContext>((sp, options) =>
-        {
-            var config = sp.GetRequiredService<IConfiguration>();
-            var connectionString = config["ConnectionString"];
-            options.UseSqlite(connectionString);
-        });
+        // Add EF Core
+        builder.Services.AddDbContext<OnlineTheaterDbContext>((sp, options) => options.UseSqlite(builder.Configuration["ConnectionString"]));
         
         // Add application services
         builder.Services.AddTransient<MovieRepository>();
@@ -36,7 +31,14 @@ public class Program
         using (var scope = app.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<OnlineTheaterDbContext>();
-            db.Database.Migrate();
+            if (db.Database.IsRelational()) 
+            {
+                db.Database.Migrate();
+            }
+            else
+            {
+                db.Database.EnsureCreated();
+            }
         }
 
         // Configure the HTTP request pipeline.

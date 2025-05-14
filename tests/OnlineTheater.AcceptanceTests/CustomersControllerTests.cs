@@ -1,38 +1,47 @@
 using System.Net;
 using System.Net.Http.Json;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using OnlineTheater.Api;
+using OnlineTheater.Logic.Data;
 using OnlineTheater.Logic.Entities;
 
 namespace OnlineTheater.AcceptanceTests;
 
-public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Program>>, IDisposable
+public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Program>>
 {
-    private readonly WebApplicationFactory<Program> _factory;
     private readonly HttpClient _client;
-    private string _dbPath;
 
-    public CustomersControllerTests()
+    public CustomersControllerTests(WebApplicationFactory<Program> factory)
     {
-        _dbPath = Path.Combine(Path.GetTempPath(), $"OnlineTheater_{Guid.NewGuid()}.db");
-        var connectionString = $"Data Source={_dbPath};";
-
-        var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        var newFactory = factory.WithWebHostBuilder(builder =>
         {
-            builder.UseEnvironment("Test");
-
-            builder.ConfigureAppConfiguration((context, configBuilder) =>
+            builder.ConfigureTestServices(services =>
             {
-                configBuilder.AddInMemoryCollection(new Dictionary<string, string>
+                var descriptors = services.Where(
+                    d => d.ServiceType == typeof(DbContextOptions<OnlineTheaterDbContext>)).ToList();
+
+                foreach (var descriptor in descriptors)
                 {
-                    ["ConnectionString"] = connectionString
-                });
+                    services.Remove(descriptor);
+                }
+                
+                // Crear una instancia compartida de DbContextOptions
+                var dbName = Guid.NewGuid().ToString();
+                var optionsBuilder = new DbContextOptionsBuilder<OnlineTheaterDbContext>();
+                optionsBuilder.UseInMemoryDatabase(dbName);
+
+                var options = optionsBuilder.Options;
+
+                // Registrar manualmente el contexto con estas opciones
+                services.AddSingleton(options); // 👈 ESTA es la clave: misma instancia de options
+                services.AddScoped<OnlineTheaterDbContext>();
             });
         });
 
-        _client = factory.CreateClient();
+        _client = newFactory.CreateClient();
     }
 
     private async Task<long> CreateCustomerAndGetId(Customer customer)
@@ -248,13 +257,5 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
     [Fact]
     public async Task Update_InvalidModelState_ReturnsBadRequest()
     {
-    }
-    
-    public void Dispose()
-    {
-        if (File.Exists(_dbPath))
-        {
-            try { File.Delete(_dbPath); } catch { }
-        }
     }
 } 
