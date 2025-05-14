@@ -396,4 +396,22 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
+    
+    [Fact]
+    public async Task Create_InvalidEmail_ReturnsBadRequest()
+    {
+        // Arrange
+        var customer = new Customer
+        {
+            Name = "Invalid Email User",
+            Email = "invalid-email", // Correo electrónico inválido
+            PurchasedMovies = new List<PurchasedMovie>()
+        };
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/api/customers", customer);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
 } 
