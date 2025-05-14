@@ -142,13 +142,39 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
     }
 
     [Fact]
-    public async Task PromoteCustomer_CustomerNotFound_ReturnsBadRequest()
+    public async Task PromoteCustomer_CustomerNotFound_ReturnsNotFound()
     {
+        // Arrange
+        var nonExistentCustomerId = 999; // Un ID que no existe en la base de datos
+    
+        // Act
+        var response = await _client.PostAsync($"/api/customers/{nonExistentCustomerId}/promote", null);
+    
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]
-    public async Task PurchaseMovie_InvalidMovieId_ReturnsBadRequest()
+    public async Task PurchaseMovie_InvalidMovieId_ReturnsNotFound()
     {
+        // Arrange
+        var customer = new Customer
+        {
+            Name = "John Doe",
+            Email = "john.doe@example.com",
+            PurchasedMovies = new List<PurchasedMovie>()
+        };
+    
+        // Crear un cliente válido
+        var customerId = await CreateCustomerAndGetId(customer);
+    
+        var invalidMovieId = -1; // ID de película inválido
+    
+        // Act
+        var response = await _client.PostAsync($"/api/customers/{customerId}/movies/{invalidMovieId}/purchase", null);
+    
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]
