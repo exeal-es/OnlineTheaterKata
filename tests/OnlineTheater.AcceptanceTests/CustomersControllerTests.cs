@@ -361,4 +361,27 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
         // Assert - Verificar que la segunda compra devuelve BadRequest
         Assert.Equal(HttpStatusCode.BadRequest, secondPurchaseResponse.StatusCode);
     }
+    
+    [Fact]
+    public async Task PurchaseMovie_NonExistentMovie_ReturnsBadRequest()
+    {
+        // Arrange
+        var customer = new Customer
+        {
+            Name = "John Doe",
+            Email = "john.doe@example.com",
+            PurchasedMovies = new List<PurchasedMovie>()
+        };
+
+        // Crear un cliente válido y obtener su ID
+        var customerId = await CreateCustomerAndGetId(customer);
+
+        var nonExistentMovieId = 9999; // ID de película que no existe
+
+        // Act
+        var response = await _client.PostAsJsonAsync($"/api/customers/{customerId}/movies", nonExistentMovieId);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
 } 
