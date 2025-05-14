@@ -45,7 +45,7 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
         getAllResponse.EnsureSuccessStatusCode();
         var customers = await getAllResponse.Content.ReadFromJsonAsync<List<Customer>>();
         
-        return customers.LastOrDefault()?.Id ?? 1;
+        return customers.Last().Id;
     }
 
     [Fact]
@@ -185,6 +185,39 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
     [Fact]
     public async Task Update_ValidCustomer_UpdatesNameSuccessfully()
     {
+        // Arrange
+        var customer = new Customer
+        {
+            Name = "Original Name",
+            Email = "original.email@example.com",
+            PurchasedMovies = new List<PurchasedMovie>()
+        };
+    
+        // Crear un cliente válido y obtener su ID
+        var customerId = await CreateCustomerAndGetId(customer);
+    
+        // Act - Actualizar el nombre del cliente
+        var updatedCustomer = new Customer
+        {
+            Name = "Updated Name",
+            Email = customer.Email, // El email debe permanecer igual
+            PurchasedMovies = customer.PurchasedMovies
+        };
+    
+        var updateResponse = await _client.PutAsJsonAsync($"/api/customers/{customerId}", updatedCustomer);
+    
+        // Assert - Verificar que la actualización fue exitosa
+        updateResponse.EnsureSuccessStatusCode();
+    
+        // Act - Obtener el cliente actualizado
+        var getResponse = await _client.GetAsync($"/api/customers/{customerId}");
+        getResponse.EnsureSuccessStatusCode();
+        var retrievedCustomer = await getResponse.Content.ReadFromJsonAsync<Customer>();
+    
+        // Assert - Verificar que el nombre fue actualizado correctamente
+        Assert.NotNull(retrievedCustomer);
+        Assert.Equal("Updated Name", retrievedCustomer.Name);
+        Assert.Equal(customer.Email, retrievedCustomer.Email);
     }
 
     [Fact]

@@ -16,7 +16,12 @@ public class Program
         builder.Services.AddSwaggerGen();
 
         // Add NHibernate and custom services
-        builder.Services.AddSingleton(new SessionFactory(builder.Configuration["ConnectionString"]));
+        builder.Services.AddSingleton<SessionFactory>(sp =>
+        {
+            var config = sp.GetRequiredService<IConfiguration>();
+            var connectionString = config["ConnectionString"];
+            return new SessionFactory(connectionString);
+        });
         builder.Services.AddScoped<UnitOfWork>();
         builder.Services.AddTransient<MovieRepository>();
         builder.Services.AddTransient<CustomerRepository>();
