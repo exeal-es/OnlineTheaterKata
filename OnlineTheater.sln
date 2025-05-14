@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26730.12
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Api", "src\Api\Api.csproj", "{36484BFF-E628-49BD-BF49-01BAD88D69E3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OnlineTheater.Api", "src\OnlineTheater.Api\OnlineTheater.Api.csproj", "{36484BFF-E628-49BD-BF49-01BAD88D69E3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Logic", "src\Logic\Logic.csproj", "{0B9EC24F-E84F-4375-A7B0-0F8C3A4B015A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OnlineTheater.Logic", "src\OnlineTheater.Logic\OnlineTheater.Logic.csproj", "{0B9EC24F-E84F-4375-A7B0-0F8C3A4B015A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AcceptanceTests", "tests\AcceptanceTests\AcceptanceTests.csproj", "{76435146-62D9-4082-BAA9-C2A44DE7F5BA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OnlineTheater.AcceptanceTests", "tests\OnlineTheater.AcceptanceTests\OnlineTheater.AcceptanceTests.csproj", "{76435146-62D9-4082-BAA9-C2A44DE7F5BA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
