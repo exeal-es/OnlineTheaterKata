@@ -174,4 +174,96 @@ public class CustomersController : ControllerBase
             return StatusCode(500, new { error = e.Message });
         }
     }
+
+    [HttpPost("{id}/promotion")]
+    public async Task PromoteCustomer_ValidCustomer_SuccessfulPromotion()
+    {
+        // Implementation of the method
+    }
+
+    [HttpPost("{id}/promotion")]
+    public async Task PromoteCustomer_CustomerNotFound_ReturnsBadRequest()
+    {
+        // Implementation of the method
+    }
+
+    [HttpPost("{id}/promotion")]
+    public async Task PromoteCustomer_CustomerAlreadyAdvanced_ReturnsBadRequest()
+    {
+        // Implementation of the method
+    }
+
+    [HttpPost("{id}/promotion")]
+    public async Task PromoteCustomer_InsufficientMoviesPurchased_ReturnsBadRequest()
+    {
+        // Implementation of the method
+    }
+
+    [HttpPost("{id}/movies")]
+    public async Task PurchaseMovie_ValidCustomerAndMovie_SuccessfulPurchase()
+    {
+        // Implementation of the method
+    }
+
+    [HttpPost("{id}/movies")]
+    public async Task PurchaseMovie_InvalidMovieId_ReturnsBadRequest()
+    {
+        // Implementation of the method
+    }
+
+    [HttpPost("{id}/movies")]
+    public async Task PurchaseMovie_InvalidCustomerId_ReturnsBadRequest()
+    {
+        // Implementation of the method
+    }
+
+    [HttpPost("{id}/movies")]
+    public async Task PurchaseMovie_MovieAlreadyPurchased_ReturnsBadRequest()
+    {
+        // Implementation of the method
+    }
+
+    [HttpPost("{id}/movies")]
+    public async Task PurchaseMovie_ExpiredMoviePurchase_AllowsRepurchase()
+    {
+        // Implementation of the method
+    }
+
+    [HttpPut("{id}")]
+    public async Task Update_ValidCustomer_UpdatesNameSuccessfully()
+    {
+        // Implementation of the method
+    }
+
+    [HttpPut("{id}")]
+    public async Task Update_InvalidCustomerId_ReturnsBadRequest()
+    {
+        // Implementation of the method
+    }
+
+    [HttpPut("{id}")]
+    public async Task Update_InvalidModelState_ReturnsBadRequest()
+    {
+        // Implementation of the method
+    }
+
+    public async Task Create_DuplicateEmail_ReturnsBadRequest()
+    {
+        // Implementation of the method
+    }
+
+    public async Task Create_InvalidModelState_ReturnsBadRequest()
+    {
+        // Implementation of the method
+    }
+
+    public async Task Create_ExceptionThrown_Returns500()
+    {
+        // Implementation of the method
+    }
+
+    public async Task Get_NonExistentCustomer_ReturnsNotFound()
+    {
+        // Implementation of the method
+    }
 }
