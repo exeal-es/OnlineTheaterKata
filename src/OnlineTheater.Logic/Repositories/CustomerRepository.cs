@@ -16,8 +16,7 @@ public class CustomerRepository(OnlineTheaterDbContext context)
                 Email = x.Email,
                 Status = x.Status,
                 StatusExpirationDate = x.StatusExpirationDate,
-                MoneySpent = x.MoneySpent,
-                PurchasedMovies = null
+                MoneySpent = x.MoneySpent
             })
             .ToList();
     }
@@ -41,7 +40,7 @@ public class CustomerRepository(OnlineTheaterDbContext context)
     public Customer GetById(long id)
     {
         return context.Customers
-            .Include(c => c.PurchasedMovies)
+            .Include(c => c.PurchasedMovies).ThenInclude(pm => pm.Movie)
             .FirstOrDefault(c => c.Id == id);
     }
 }

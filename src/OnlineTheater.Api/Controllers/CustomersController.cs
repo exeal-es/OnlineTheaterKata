@@ -23,13 +23,21 @@ public class CustomersController : ControllerBase
     [HttpGet("{id}")]
     [ProducesResponseType(typeof(Customer), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public ActionResult<Customer> Get(long id)
+    public ActionResult<CustomerDto> Get(long id)
     {
+
         Customer customer = _customerRepository.GetById(id);
         if (customer == null)
         {
             return NotFound();
         }
+
+        var customerstatusdto = (CustomerStatusDto)customer.Status;
+        var purchasedmoviesdtos = customer.PurchasedMovies?
+           .Select(x => new PurchasedMovieDto(x.Movie.Name, x.Price, x.PurchaseDate, x.ExpirationDate))
+            .ToList();
+
+        var customerdto = new CustomerDto(customer.Name, customerstatusdto, customer.StatusExpirationDate, customer.MoneySpent, purchasedmoviesdtos);
 
         return Ok(customer);
     }

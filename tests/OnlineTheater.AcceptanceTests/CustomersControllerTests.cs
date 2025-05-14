@@ -338,7 +338,12 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
 
         // Act - Obtener el cliente actualizado
         var getResponse = await _client.GetAsync($"/api/customers/{customerId}");
-        getResponse.EnsureSuccessStatusCode();
+        //getResponse.EnsureSuccessStatusCode();
+        if (!getResponse.IsSuccessStatusCode)
+        {
+            var error = await getResponse.Content.ReadAsStringAsync();
+            throw new Exception($"Server error: {error}");
+        }
         var updatedCustomer = await getResponse.Content.ReadFromJsonAsync<Customer>();
 
         // Assert - Verificar que la película está en la lista de películas compradas
