@@ -1,22 +1,54 @@
-Welcome to Refactoring from Anemic Domain Model Towards a Rich One
-=====================
+# Online Theater Kata
 
-This is the source code for my Pluralsight course [Refactoring from Anemic Domain Model Towards a Rich One][L5].
+A programming kata focused on refactoring from an anemic domain model to a rich domain model using Domain-Driven Design (DDD) tactical patterns.
 
-How to Get Started
---------------
+## Overview
 
-There are 2 versions of the source code: Before and After. You can go ahead and look at the After version but I would recommend that you follow the course and do all refactoring steps along with me.
+This kata simulates an online theater system where customers can purchase movies with different licensing models. The initial implementation follows an anemic domain model pattern, and the goal is to refactor it into a rich domain model by applying DDD principles.
 
-In order to run the application, you need to create a database and change the connection string in the composition root.
+## Domain
 
-.NET 6
---------------
-The version of the "Before" solution for .NET 6 can be found in a separate branch: [dotnet6][L6]
+The system includes:
+- **Customers**: Can purchase movies and be promoted to different status levels
+- **Movies**: Available with different licensing models (Two Days, Life Long)
+- **Purchased Movies**: Track customer movie purchases with expiration dates
 
-[L2]: DBCreationScript.txt
-[L3]: DddInPractice.UI/App.xaml.cs
-[L1]: http://www.apache.org/licenses/LICENSE-2.0
-[L4]: https://www.pluralsight.com/courses/domain-driven-design-in-practice
-[L5]: http://www.pluralsight.com/courses/refactoring-anemic-domain-model
-[L6]: https://github.com/vkhorikov/AnemicDomainModel/tree/dotnet6
+## Key Entities
+
+- `Customer`: Regular customers who can purchase movies
+- `Movie`: Movies with various licensing models
+- `PurchasedMovie`: Represents a customer's movie purchase
+
+## Technologies
+
+- .NET 8
+- ASP.NET Core Web API
+- Entity Framework Core (In-Memory for tests)
+- xUnit for testing
+
+## Getting Started
+
+1. Clone the repository
+2. Build the solution
+3. Run the acceptance tests to understand the current behavior
+4. Begin refactoring the anemic domain model into a rich domain model
+
+## Testing
+
+The kata includes comprehensive acceptance tests that validate the API behavior. Run tests using:
+
+```bash
+dotnet test
+```
+
+## Credits
+
+Based on work by Vladimir Khorikov, adapted as a refactoring kata for learning DDD tactical patterns.
+
+## Goal
+
+Transform the anemic domain model into a rich domain model by:
+- Moving business logic from services into entities
+- Implementing proper encapsulation
+- Applying DDD patterns (Value Objects, Entities, Aggregates)
+- Ensuring domain invariants are maintained within the domain layer

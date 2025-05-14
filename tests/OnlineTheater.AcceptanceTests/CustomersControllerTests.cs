@@ -13,7 +13,9 @@ namespace OnlineTheater.AcceptanceTests;
 public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Program>>
 {
     private readonly HttpClient _client;
-    private readonly long _movieId;
+    private readonly long _twoDaysMovieId;
+    private readonly long _lifeLongMovieId;
+
 
     public CustomersControllerTests(WebApplicationFactory<Program> factory)
     {
@@ -58,7 +60,17 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
                 context.Movies.Add(movie);
                 context.SaveChanges();
 
-                _movieId = movie.Id;
+                _twoDaysMovieId = movie.Id;
+                
+                var lifeLongMovie = new Movie
+                {
+                    Name = "Test Movie LifeLong",
+                    LicensingModel = LicensingModel.LifeLong
+                };
+                context.Movies.Add(lifeLongMovie);
+                context.SaveChanges();
+
+                _lifeLongMovieId = lifeLongMovie.Id;
             }
         }
 
@@ -314,7 +326,7 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
         var customerId = await CreateCustomerAndGetId(customer);
 
         // Obtener el ID de una película existente
-        var movieId = _movieId;
+        var movieId = _twoDaysMovieId;
 
         // Act - Comprar la película
         var purchaseResponse = await _client.PostAsJsonAsync($"/api/customers/{customerId}/movies", movieId);
@@ -349,7 +361,7 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
         var customerId = await CreateCustomerAndGetId(customer);
 
         // Obtener el ID de una película existente
-        var movieId = _movieId;
+        var movieId = _twoDaysMovieId;
 
         // Act - Comprar la película por primera vez
         var firstPurchaseResponse = await _client.PostAsJsonAsync($"/api/customers/{customerId}/movies", movieId);
