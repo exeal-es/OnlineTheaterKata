@@ -37,17 +37,22 @@ public class CustomersController : ControllerBase
            .Select(x => new PurchasedMovieDto(x.Movie.Name, x.Price, x.PurchaseDate, x.ExpirationDate))
             .ToList();
 
-        var customerdto = new CustomerDto(customer.Name, customerstatusdto, customer.StatusExpirationDate, customer.MoneySpent, purchasedmoviesdtos);
+        var customerdto = new CustomerDto(customer.Id, customer.Name, customer.Email, customerstatusdto, customer.StatusExpirationDate, customer.MoneySpent, purchasedmoviesdtos);
 
         return Ok(customer);
     }
 
     [HttpGet]
-    [ProducesResponseType(typeof(IReadOnlyList<Customer>), StatusCodes.Status200OK)]
-    public ActionResult<IReadOnlyList<Customer>> GetList()
+    [ProducesResponseType(typeof(IReadOnlyList<CustomerBasicDto>), StatusCodes.Status200OK)]
+    public ActionResult<IReadOnlyList<CustomerBasicDto>> GetList()
     {
         IReadOnlyList<Customer> customers = _customerRepository.GetList();
-        return Ok(customers);
+        
+        var customersdtos = customers
+            .Select(x => new CustomerBasicDto( x.Id, x.Name, x.Email, (CustomerStatusDto)x.Status, x.StatusExpirationDate, x.MoneySpent))
+            .ToList();
+
+        return Ok(customersdtos);
     }
 
     [HttpPost]
