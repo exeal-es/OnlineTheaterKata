@@ -8,18 +8,18 @@ public class Customer : Entity
 {
     [Required]
     [MaxLength(100, ErrorMessage = "Name is too long")]
-    public virtual string Name { get; set; }
+    public string Name { get; set; }
 
     [Required]
     [RegularExpression(@"^(.+)@(.+)$", ErrorMessage = "Email is invalid")]
-    public virtual string Email { get; set; }
+    public string Email { get; set; }
 
     [JsonConverter(typeof(StringEnumConverter))]
-    public virtual CustomerStatus Status { get; set; }
+    public CustomerStatus Status { get; set; }
 
-    public virtual DateTime? StatusExpirationDate { get; set; }
+    public DateTime? StatusExpirationDate { get; set; }
 
-    public virtual decimal MoneySpent { get; set; }
+    public decimal MoneySpent { get; set; }
 
-    public virtual IList<PurchasedMovie> PurchasedMovies { get; set; } = [];
+    public List<PurchasedMovie> PurchasedMovies { get; set; } = [];
 }

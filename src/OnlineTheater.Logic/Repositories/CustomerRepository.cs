@@ -1,4 +1,5 @@
-﻿using OnlineTheater.Logic.Entities;
+﻿using Microsoft.EntityFrameworkCore;
+using OnlineTheater.Logic.Entities;
 using OnlineTheater.Logic.Data;
 
 namespace OnlineTheater.Logic.Repositories;
@@ -39,6 +40,8 @@ public class CustomerRepository(OnlineTheaterDbContext context)
 
     public Customer GetById(long id)
     {
-        return context.Customers.Find(id);
+        return context.Customers
+            .Include(c => c.PurchasedMovies)
+            .FirstOrDefault(c => c.Id == id);
     }
 }
