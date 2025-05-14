@@ -19,3 +19,5 @@ project.fragment.lock.json
 .vs
 packages/
 *.db
+/src/OnlineTheater.Api/OnlineTheater.db-shm
+/src/OnlineTheater.Api/OnlineTheater.db-wal
