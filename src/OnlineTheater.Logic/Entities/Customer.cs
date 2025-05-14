@@ -21,5 +21,5 @@ public class Customer : Entity
 
     public virtual decimal MoneySpent { get; set; }
 
-    public virtual IList<PurchasedMovie> PurchasedMovies { get; set; }
+    public virtual IList<PurchasedMovie> PurchasedMovies { get; set; } = [];
 }

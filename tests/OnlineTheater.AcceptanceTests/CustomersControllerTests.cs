@@ -13,6 +13,7 @@ namespace OnlineTheater.AcceptanceTests;
 public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Program>>
 {
     private readonly HttpClient _client;
+    private readonly long _movieId;
 
     public CustomersControllerTests(WebApplicationFactory<Program> factory)
     {
@@ -49,12 +50,15 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
             
             if (!context.Movies.Any())
             {
-                context.Movies.Add(new Movie 
-                { 
+                var movie = new Movie
+                {
                     Name = "Test Movie",
-                    LicensingModel = LicensingModel.TwoDays 
-                });
+                    LicensingModel = LicensingModel.TwoDays
+                };
+                context.Movies.Add(movie);
                 context.SaveChanges();
+
+                _movieId = movie.Id;
             }
         }
 
@@ -217,11 +221,6 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
     }
 
     [Fact]
-    public async Task PurchaseMovie_InvalidCustomerId_ReturnsBadRequest()
-    {
-    }
-
-    [Fact]
     public async Task Update_ValidCustomer_UpdatesNameSuccessfully()
     {
         // Arrange
@@ -299,14 +298,39 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, createResponse2.StatusCode);
     }
-
+    
     [Fact]
-    public async Task Create_InvalidModelState_ReturnsBadRequest()
+    public async Task PurchaseMovie_ValidMovieId_AddsMovieToPurchasedMovies()
     {
-    }
+        // Arrange
+        var customer = new Customer
+        {
+            Name = "John Doe",
+            Email = "john.doe@example.com",
+            PurchasedMovies = new List<PurchasedMovie>()
+        };
 
-    [Fact]
-    public async Task Update_InvalidModelState_ReturnsBadRequest()
-    {
+        // Crear un cliente válido y obtener su ID
+        var customerId = await CreateCustomerAndGetId(customer);
+
+        // Obtener el ID de una película existente
+        var movieId = _movieId;
+
+        // Act - Comprar la película
+        var purchaseResponse = await _client.PostAsJsonAsync($"/api/customers/{customerId}/movies", movieId);
+        if (!purchaseResponse.IsSuccessStatusCode)
+        {
+            var error = await purchaseResponse.Content.ReadAsStringAsync();
+            throw new Exception($"Server error: {error}");
+        }
+
+        // Act - Obtener el cliente actualizado
+        var getResponse = await _client.GetAsync($"/api/customers/{customerId}");
+        getResponse.EnsureSuccessStatusCode();
+        var updatedCustomer = await getResponse.Content.ReadFromJsonAsync<Customer>();
+
+        // Assert - Verificar que la película está en la lista de películas compradas
+        Assert.NotNull(updatedCustomer);
+        Assert.Contains(updatedCustomer.PurchasedMovies, pm => pm.MovieId == movieId);
     }
 } 
