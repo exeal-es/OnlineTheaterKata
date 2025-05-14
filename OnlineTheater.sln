@@ -7,8 +7,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Api", "src\Api\Api.csproj",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Logic", "src\Logic\Logic.csproj", "{0B9EC24F-E84F-4375-A7B0-0F8C3A4B015A}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{BF14919A-1B40-434B-98EB-8EBA8D77668A}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AcceptanceTests", "tests\AcceptanceTests\AcceptanceTests.csproj", "{76435146-62D9-4082-BAA9-C2A44DE7F5BA}"
 EndProject
 Global
@@ -37,6 +35,5 @@ Global
 		SolutionGuid = {2AF79079-DA8B-4E50-8B02-9F1EC4FE3476}
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{76435146-62D9-4082-BAA9-C2A44DE7F5BA} = {BF14919A-1B40-434B-98EB-8EBA8D77668A}
 	EndGlobalSection
 EndGlobal
