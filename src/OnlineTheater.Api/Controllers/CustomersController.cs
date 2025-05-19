@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using OnlineTheater.Api.Models;
 using OnlineTheater.Logic.Entities;
 using OnlineTheater.Logic.Repositories;
 using OnlineTheater.Logic.Services;
@@ -34,12 +35,12 @@ public class CustomersController : ControllerBase
 
         var customerstatusdto = (CustomerStatusDto)customer.Status;
         var purchasedmoviesdtos = customer.PurchasedMovies?
-           .Select(x => new PurchasedMovieDto(x.Movie.Name, x.Price, x.PurchaseDate, x.ExpirationDate))
+           .Select(x => new PurchasedMovieDto(x.MovieId, x.Movie.Name, x.Price, x.PurchaseDate, x.ExpirationDate))
             .ToList();
 
-        var customerdto = new CustomerDto(customer.Id, customer.Name, customer.Email, customerstatusdto, customer.StatusExpirationDate, customer.MoneySpent, purchasedmoviesdtos);
+        var customerdto = new CustomerDto(customer.Id, customer.Name, customer.Email.Valor, customerstatusdto, customer.StatusExpirationDate, customer.MoneySpent, purchasedmoviesdtos);
 
-        return Ok(customer);
+        return Ok(customerdto);
     }
 
     [HttpGet]
@@ -49,7 +50,7 @@ public class CustomersController : ControllerBase
         IReadOnlyList<Customer> customers = _customerRepository.GetList();
         
         var customersdtos = customers
-            .Select(x => new CustomerBasicDto( x.Id, x.Name, x.Email, (CustomerStatusDto)x.Status, x.StatusExpirationDate, x.MoneySpent))
+            .Select(x => new CustomerBasicDto( x.Id, x.Name, x.Email.Valor, (CustomerStatusDto)x.Status, x.StatusExpirationDate, x.MoneySpent))
             .ToList();
 
         return Ok(customersdtos);
@@ -59,7 +60,7 @@ public class CustomersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public IActionResult Create([FromBody] Customer item)
+    public IActionResult Create([FromBody] CreateCustomerDto item)
     {
         try
         {
@@ -68,14 +69,22 @@ public class CustomersController : ControllerBase
                 return BadRequest(ModelState);
             }
 
-            if (_customerRepository.GetByEmail(item.Email) != null)
+            Email email = new(item.Email);
+
+            if (_customerRepository.GetByEmail(email) != null)
             {
                 return BadRequest("Email is already in use: " + item.Email);
             }
 
-            item.Id = 0;
-            item.Status = CustomerStatus.Regular;
-            _customerRepository.Add(item);
+            Customer customer = new()
+            {
+                Name = item.Name,
+                Email = email,
+                Status = CustomerStatus.Regular,
+                StatusExpirationDate = null,
+                Id = 0
+            };
+            _customerRepository.Add(customer);
             _customerRepository.SaveChanges();
 
             return Ok();
@@ -90,7 +99,7 @@ public class CustomersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public IActionResult Update(long id, [FromBody] Customer item)
+    public IActionResult Update(long id, [FromBody] CreateCustomerDto item)
     {
         try
         {

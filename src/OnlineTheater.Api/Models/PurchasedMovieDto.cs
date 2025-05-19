@@ -1,4 +1,4 @@
 ﻿
 namespace OnlineTheater.Api.Controllers;
 
-public record PurchasedMovieDto ( string Name, decimal Price, DateTime PurchaseDate, DateTime? ExpirationDate);
+public record PurchasedMovieDto (long MovieId, string Name, decimal Price, DateTime PurchaseDate, DateTime? ExpirationDate);

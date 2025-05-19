@@ -21,7 +21,7 @@ public class CustomerRepository(OnlineTheaterDbContext context)
             .ToList();
     }
 
-    public Customer GetByEmail(string email)
+    public Customer GetByEmail(Email email)
     {
         return context.Customers
             .FirstOrDefault(x => x.Email == email);

@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using OnlineTheater.Api;
+using OnlineTheater.Api.Controllers;
+using OnlineTheater.Api.Models;
 using OnlineTheater.Logic.Data;
 using OnlineTheater.Logic.Entities;
 
@@ -77,7 +79,7 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
         _client = newFactory.CreateClient();
     }
 
-    private async Task<long> CreateCustomerAndGetId(Customer customer)
+    private async Task<long> CreateCustomerAndGetId(CreateCustomerDto customer)
     {
         var createResponse = await _client.PostAsJsonAsync("/api/customers", customer);
         createResponse.EnsureSuccessStatusCode();
@@ -85,7 +87,7 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
         // Get all customers to find the created one
         var getAllResponse = await _client.GetAsync("/api/customers");
         getAllResponse.EnsureSuccessStatusCode();
-        var customers = await getAllResponse.Content.ReadFromJsonAsync<List<Customer>>();
+        var customers = await getAllResponse.Content.ReadFromJsonAsync<List<CustomerBasicDto>>();
         
         return customers.Last().Id;
     }
@@ -116,12 +118,7 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
     public async Task Create_ValidCustomer_CanBeRetrieved()
     {
         // Arrange
-        var customer = new Customer
-        {
-            Name = "John Doe",
-            Email = "john.doe@example.com",
-            PurchasedMovies = new List<PurchasedMovie>()
-        };
+        var customer = new CreateCustomerDto("John Doe", "john.doe@example.com");
 
         // Act - Create customer
         var createResponse = await _client.PostAsJsonAsync("/api/customers", customer);
@@ -138,14 +135,14 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
         // Act - Get all customers
         var getAllResponse = await _client.GetAsync("/api/customers");
         getAllResponse.EnsureSuccessStatusCode();
-        var customers = await getAllResponse.Content.ReadFromJsonAsync<List<Customer>>();
+        var customers = await getAllResponse.Content.ReadFromJsonAsync<List<CustomerBasicDto>>();
 
         // Assert
         Assert.NotNull(customers);
         Assert.Single(customers);
         Assert.Equal(customer.Name, customers[0].Name);
         Assert.Equal(customer.Email, customers[0].Email);
-        Assert.Equal(CustomerStatus.Regular, customers[0].Status);
+        Assert.Equal(CustomerStatusDto.Regular, customers[0].Status);
     }
     
     [Fact]
@@ -165,12 +162,7 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
     public async Task GetById_ExistingCustomer_ReturnsCustomer()
     {
         // Arrange
-        var customer = new Customer
-        {
-            Name = "Jane Doe",
-            Email = "jane.doe@example.com",
-            PurchasedMovies = new List<PurchasedMovie>()
-        };
+        var customer = new CreateCustomerDto("Jane Doe", "jane.doe@example.com");
 
         // Create customer and get ID
         var customerId = await CreateCustomerAndGetId(customer);
@@ -186,14 +178,14 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
         }
 
         getByIdResponse.EnsureSuccessStatusCode();
-        var retrievedCustomer = await getByIdResponse.Content.ReadFromJsonAsync<Customer>();
+        var retrievedCustomer = await getByIdResponse.Content.ReadFromJsonAsync<CustomerDto>();
 
         // Assert
         Assert.NotNull(retrievedCustomer);
         Assert.Equal(customerId, retrievedCustomer.Id);
         Assert.Equal(customer.Name, retrievedCustomer.Name);
         Assert.Equal(customer.Email, retrievedCustomer.Email);
-        Assert.Equal(CustomerStatus.Regular, retrievedCustomer.Status);
+        Assert.Equal(CustomerStatusDto.Regular, retrievedCustomer.Status);
     }
 
     [Fact]
@@ -213,13 +205,8 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
     public async Task PurchaseMovie_InvalidMovieId_ReturnsNotFound()
     {
         // Arrange
-        var customer = new Customer
-        {
-            Name = "John Doe",
-            Email = "john.doe@example.com",
-            PurchasedMovies = new List<PurchasedMovie>()
-        };
-    
+        var customer = new CreateCustomerDto("John Doe", "john.doe@example.com");
+
         // Crear un cliente válido
         var customerId = await CreateCustomerAndGetId(customer);
     
@@ -236,24 +223,14 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
     public async Task Update_ValidCustomer_UpdatesNameSuccessfully()
     {
         // Arrange
-        var customer = new Customer
-        {
-            Name = "Original Name",
-            Email = "original.email@example.com",
-            PurchasedMovies = new List<PurchasedMovie>()
-        };
-    
+        var customer = new CreateCustomerDto("Original Name", "original.email@example.com");
+
         // Crear un cliente válido y obtener su ID
         var customerId = await CreateCustomerAndGetId(customer);
-    
+
         // Act - Actualizar el nombre del cliente
-        var updatedCustomer = new Customer
-        {
-            Name = "Updated Name",
-            Email = customer.Email, // El email debe permanecer igual
-            PurchasedMovies = customer.PurchasedMovies
-        };
-    
+        var updatedCustomer = new CreateCustomerDto("Updated Name", customer.Email);
+        
         var updateResponse = await _client.PutAsJsonAsync($"/api/customers/{customerId}", updatedCustomer);
     
         // Assert - Verificar que la actualización fue exitosa
@@ -262,7 +239,7 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
         // Act - Obtener el cliente actualizado
         var getResponse = await _client.GetAsync($"/api/customers/{customerId}");
         getResponse.EnsureSuccessStatusCode();
-        var retrievedCustomer = await getResponse.Content.ReadFromJsonAsync<Customer>();
+        var retrievedCustomer = await getResponse.Content.ReadFromJsonAsync<CustomerDto>();
     
         // Assert - Verificar que el nombre fue actualizado correctamente
         Assert.NotNull(retrievedCustomer);
@@ -278,7 +255,7 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
         var updatedCustomer = new Customer
         {
             Name = "Updated Name",
-            Email = "updated.email@example.com",
+            Email = new Email("updated.email@example.com"),
             PurchasedMovies = new List<PurchasedMovie>()
         };
     
@@ -293,12 +270,7 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
     public async Task Create_DuplicateEmail_ReturnsBadRequest()
     {
         // Arrange
-        var customer = new Customer
-        {
-            Name = "John Doe",
-            Email = "duplicate.email@example.com",
-            PurchasedMovies = new List<PurchasedMovie>()
-        };
+        var customer = new CreateCustomerDto("John Doe", "duplicate.email@example.com");
     
         // Crear el primer cliente con el correo electrónico
         var createResponse1 = await _client.PostAsJsonAsync("/api/customers", customer);
@@ -315,12 +287,7 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
     public async Task PurchaseMovie_ValidMovieId_AddsMovieToPurchasedMovies()
     {
         // Arrange
-        var customer = new Customer
-        {
-            Name = "John Doe",
-            Email = "john.doe@example.com",
-            PurchasedMovies = new List<PurchasedMovie>()
-        };
+        var customer = new CreateCustomerDto("John Doe", "john.doe@example.com");
 
         // Crear un cliente válido y obtener su ID
         var customerId = await CreateCustomerAndGetId(customer);
@@ -344,7 +311,7 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
             var error = await getResponse.Content.ReadAsStringAsync();
             throw new Exception($"Server error: {error}");
         }
-        var updatedCustomer = await getResponse.Content.ReadFromJsonAsync<Customer>();
+        var updatedCustomer = await getResponse.Content.ReadFromJsonAsync<CustomerDto>();
 
         // Assert - Verificar que la película está en la lista de películas compradas
         Assert.NotNull(updatedCustomer);
@@ -355,12 +322,7 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
     public async Task PurchaseMovie_AlreadyPurchased_ReturnsBadRequest()
     {
         // Arrange
-        var customer = new Customer
-        {
-            Name = "John Doe",
-            Email = "john.doe@example.com",
-            PurchasedMovies = new List<PurchasedMovie>()
-        };
+        var customer = new CreateCustomerDto("John Doe", "john.doe@example.com");
 
         // Crear un cliente válido y obtener su ID
         var customerId = await CreateCustomerAndGetId(customer);
@@ -383,12 +345,7 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
     public async Task PurchaseMovie_NonExistentMovie_ReturnsBadRequest()
     {
         // Arrange
-        var customer = new Customer
-        {
-            Name = "John Doe",
-            Email = "john.doe@example.com",
-            PurchasedMovies = new List<PurchasedMovie>()
-        };
+        var customer = new CreateCustomerDto("John Doe", "john.doe@example.com");
 
         // Crear un cliente válido y obtener su ID
         var customerId = await CreateCustomerAndGetId(customer);
@@ -409,7 +366,7 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
         var customer = new Customer
         {
             Name = "Invalid Email User",
-            Email = "invalid-email", // Correo electrónico inválido
+            Email = new Email("invalid-email"), // Correo electrónico inválido
             PurchasedMovies = new List<PurchasedMovie>()
         };
 

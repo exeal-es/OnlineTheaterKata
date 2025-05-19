@@ -12,7 +12,7 @@ public class Customer : Entity
 
     [Required]
     [RegularExpression(@"^(.+)@(.+)$", ErrorMessage = "Email is invalid")]
-    public string Email { get; set; }
+    public Email Email { get; set; }
 
     [JsonConverter(typeof(StringEnumConverter))]
     public CustomerStatus Status { get; set; }

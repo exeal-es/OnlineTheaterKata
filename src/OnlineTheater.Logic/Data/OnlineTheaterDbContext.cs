@@ -8,4 +8,15 @@ public class OnlineTheaterDbContext(DbContextOptions<OnlineTheaterDbContext> opt
     public DbSet<Customer> Customers { get; set; }
     public DbSet<Movie> Movies { get; set; }
     public DbSet<PurchasedMovie> PurchasedMovies { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Customer>()
+            .Property(c => c.Email)
+            .HasConversion(
+                e => e.Valor,
+                e => new Email(e)).HasColumnType("text").IsRequired();
+            
+        base.OnModelCreating(modelBuilder);
+    }
 } 
