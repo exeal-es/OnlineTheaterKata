@@ -1,5 +1,3 @@
-using System.Net;
-using System.Net.Http.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
@@ -9,6 +7,8 @@ using OnlineTheater.Api.Controllers;
 using OnlineTheater.Api.Models;
 using OnlineTheater.Logic.Data;
 using OnlineTheater.Logic.Entities;
+using System.Net;
+using System.Net.Http.Json;
 
 namespace OnlineTheater.AcceptanceTests;
 
@@ -17,7 +17,6 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
     private readonly HttpClient _client;
     private readonly long _twoDaysMovieId;
     private readonly long _lifeLongMovieId;
-
 
     public CustomersControllerTests(WebApplicationFactory<Program> factory)
     {
@@ -32,7 +31,7 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
                 {
                     services.Remove(descriptor);
                 }
-                
+
                 // Crear una instancia compartida de DbContextOptions
                 var dbName = Guid.NewGuid().ToString();
                 var optionsBuilder = new DbContextOptionsBuilder<OnlineTheaterDbContext>();
@@ -51,7 +50,7 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
         {
             var context = scope.ServiceProvider.GetRequiredService<OnlineTheaterDbContext>();
             context.Database.EnsureCreated();
-            
+
             if (!context.Movies.Any())
             {
                 var movie = new Movie
@@ -63,7 +62,7 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
                 context.SaveChanges();
 
                 _twoDaysMovieId = movie.Id;
-                
+
                 var lifeLongMovie = new Movie
                 {
                     Name = "Test Movie LifeLong",
@@ -83,12 +82,12 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
     {
         var createResponse = await _client.PostAsJsonAsync("/api/customers", customer);
         createResponse.EnsureSuccessStatusCode();
-        
+
         // Get all customers to find the created one
         var getAllResponse = await _client.GetAsync("/api/customers");
         getAllResponse.EnsureSuccessStatusCode();
         var customers = await getAllResponse.Content.ReadFromJsonAsync<List<CustomerBasicDto>>();
-        
+
         return customers.Last().Id;
     }
 
@@ -97,7 +96,7 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
     {
         // Act
         var response = await _client.GetAsync("/api/customers");
-        
+
         // If we got a 500, read and display the error details
         if (response.StatusCode == HttpStatusCode.InternalServerError)
         {
@@ -122,7 +121,7 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
 
         // Act - Create customer
         var createResponse = await _client.PostAsJsonAsync("/api/customers", customer);
-        
+
         // If we got an error, read and display the error details
         if (!createResponse.IsSuccessStatusCode)
         {
@@ -144,16 +143,16 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
         Assert.Equal(customer.Email, customers[0].Email);
         Assert.Equal(CustomerStatusDto.Regular, customers[0].Status);
     }
-    
+
     [Fact]
     public async Task Get_NonExistentCustomer_ReturnsNotFound()
     {
         // Arrange
         var nonExistentCustomerId = 999; // Un ID que no existe en la base de datos
-    
+
         // Act
         var response = await _client.GetAsync($"/api/customers/{nonExistentCustomerId}");
-    
+
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
@@ -169,7 +168,7 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
 
         // Act - Get customer by ID
         var getByIdResponse = await _client.GetAsync($"/api/customers/{customerId}");
-        
+
         // If we got a 500, read and display the error details
         if (getByIdResponse.StatusCode == HttpStatusCode.InternalServerError)
         {
@@ -193,10 +192,10 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
     {
         // Arrange
         var nonExistentCustomerId = 999; // Un ID que no existe en la base de datos
-    
+
         // Act
         var response = await _client.PostAsync($"/api/customers/{nonExistentCustomerId}/promote", null);
-    
+
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
@@ -209,12 +208,12 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
 
         // Crear un cliente válido
         var customerId = await CreateCustomerAndGetId(customer);
-    
+
         var invalidMovieId = -1; // ID de película inválido
-    
+
         // Act
         var response = await _client.PostAsync($"/api/customers/{customerId}/movies/{invalidMovieId}/purchase", null);
-    
+
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
@@ -230,17 +229,17 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
 
         // Act - Actualizar el nombre del cliente
         var updatedCustomer = new CreateCustomerDto("Updated Name", customer.Email);
-        
+
         var updateResponse = await _client.PutAsJsonAsync($"/api/customers/{customerId}", updatedCustomer);
-    
+
         // Assert - Verificar que la actualización fue exitosa
         updateResponse.EnsureSuccessStatusCode();
-    
+
         // Act - Obtener el cliente actualizado
         var getResponse = await _client.GetAsync($"/api/customers/{customerId}");
         getResponse.EnsureSuccessStatusCode();
         var retrievedCustomer = await getResponse.Content.ReadFromJsonAsync<CustomerDto>();
-    
+
         // Assert - Verificar que el nombre fue actualizado correctamente
         Assert.NotNull(retrievedCustomer);
         Assert.Equal("Updated Name", retrievedCustomer.Name);
@@ -252,16 +251,12 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
     {
         // Arrange
         var invalidCustomerId = -1; // ID de cliente inválido
-        var updatedCustomer = new Customer
-        {
-            Name = "Updated Name",
-            Email = new Email("updated.email@example.com"),
-            PurchasedMovies = new List<PurchasedMovie>()
-        };
-    
+
+        var updatedCustomer = new UpdateCustomerDto("Updated Name");
+
         // Act
         var response = await _client.PutAsJsonAsync($"/api/customers/{invalidCustomerId}", updatedCustomer);
-    
+
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -271,18 +266,18 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
     {
         // Arrange
         var customer = new CreateCustomerDto("John Doe", "duplicate.email@example.com");
-    
+
         // Crear el primer cliente con el correo electrónico
         var createResponse1 = await _client.PostAsJsonAsync("/api/customers", customer);
         createResponse1.EnsureSuccessStatusCode();
-    
+
         // Intentar crear un segundo cliente con el mismo correo electrónico
         var createResponse2 = await _client.PostAsJsonAsync("/api/customers", customer);
-    
+
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, createResponse2.StatusCode);
     }
-    
+
     [Fact]
     public async Task PurchaseMovie_ValidMovieId_AddsMovieToPurchasedMovies()
     {
@@ -317,7 +312,7 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
         Assert.NotNull(updatedCustomer);
         Assert.Contains(updatedCustomer.PurchasedMovies, pm => pm.MovieId == movieId);
     }
-    
+
     [Fact]
     public async Task PurchaseMovie_AlreadyPurchased_ReturnsBadRequest()
     {
@@ -340,7 +335,7 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
         // Assert - Verificar que la segunda compra devuelve BadRequest
         Assert.Equal(HttpStatusCode.BadRequest, secondPurchaseResponse.StatusCode);
     }
-    
+
     [Fact]
     public async Task PurchaseMovie_NonExistentMovie_ReturnsBadRequest()
     {
@@ -358,17 +353,12 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
-    
+
     [Fact]
     public async Task Create_InvalidEmail_ReturnsBadRequest()
     {
         // Arrange
-        var customer = new Customer
-        {
-            Name = "Invalid Email User",
-            Email = new Email("invalid-email"), // Correo electrónico inválido
-            PurchasedMovies = new List<PurchasedMovie>()
-        };
+        var customer = new CreateCustomerDto("Invalid Email User", "invalid-email");
 
         // Act
         var response = await _client.PostAsJsonAsync("/api/customers", customer);
@@ -376,4 +366,4 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
-} 
+}

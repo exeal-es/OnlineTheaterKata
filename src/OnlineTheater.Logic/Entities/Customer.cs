@@ -1,6 +1,6 @@
-using System.ComponentModel.DataAnnotations;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using System.ComponentModel.DataAnnotations;
 
 namespace OnlineTheater.Logic.Entities;
 
@@ -13,6 +13,7 @@ public class Customer : Entity
     [Required]
     [RegularExpression(@"^(.+)@(.+)$", ErrorMessage = "Email is invalid")]
     public Email Email { get; set; }
+
 
     [JsonConverter(typeof(StringEnumConverter))]
     public CustomerStatus Status { get; set; }

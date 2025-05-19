@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using OnlineTheater.Logic.Entities;
 using OnlineTheater.Logic.Data;
+using OnlineTheater.Logic.Entities;
 
 namespace OnlineTheater.Logic.Repositories;
 

@@ -3,6 +3,7 @@ using OnlineTheater.Api.Models;
 using OnlineTheater.Logic.Entities;
 using OnlineTheater.Logic.Repositories;
 using OnlineTheater.Logic.Services;
+using CSharpFunctionalExtensions;
 
 namespace OnlineTheater.Api.Controllers;
 
@@ -26,7 +27,6 @@ public class CustomersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public ActionResult<CustomerDto> Get(long id)
     {
-
         Customer customer = _customerRepository.GetById(id);
         if (customer == null)
         {
@@ -48,9 +48,9 @@ public class CustomersController : ControllerBase
     public ActionResult<IReadOnlyList<CustomerBasicDto>> GetList()
     {
         IReadOnlyList<Customer> customers = _customerRepository.GetList();
-        
+
         var customersdtos = customers
-            .Select(x => new CustomerBasicDto( x.Id, x.Name, x.Email.Valor, (CustomerStatusDto)x.Status, x.StatusExpirationDate, x.MoneySpent))
+            .Select(x => new CustomerBasicDto(x.Id, x.Name, x.Email.Valor, (CustomerStatusDto)x.Status, x.StatusExpirationDate, x.MoneySpent))
             .ToList();
 
         return Ok(customersdtos);
@@ -69,7 +69,13 @@ public class CustomersController : ControllerBase
                 return BadRequest(ModelState);
             }
 
-            Email email = new(item.Email);
+            Result<Email> emailResult = Email.Create(item.Email);
+            if (emailResult.IsFailure)
+            {
+                return BadRequest(emailResult.Error);
+            }
+
+            Email email = emailResult.Value;
 
             if (_customerRepository.GetByEmail(email) != null)
             {
@@ -99,7 +105,7 @@ public class CustomersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public IActionResult Update(long id, [FromBody] CreateCustomerDto item)
+    public IActionResult Update(long id, [FromBody] UpdateCustomerDto item)
     {
         try
         {

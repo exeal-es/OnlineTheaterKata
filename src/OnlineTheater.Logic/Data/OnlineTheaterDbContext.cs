@@ -15,8 +15,8 @@ public class OnlineTheaterDbContext(DbContextOptions<OnlineTheaterDbContext> opt
             .Property(c => c.Email)
             .HasConversion(
                 e => e.Valor,
-                e => new Email(e)).HasColumnType("text").IsRequired();
-            
+                e => Email.Create(e).Value).HasColumnType("text").IsRequired();
+
         base.OnModelCreating(modelBuilder);
     }
-} 
+}
