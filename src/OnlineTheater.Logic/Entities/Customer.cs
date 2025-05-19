@@ -10,10 +10,7 @@ public class Customer : Entity
     [MaxLength(100, ErrorMessage = "Name is too long")]
     public string Name { get; set; }
 
-    [Required]
-    [RegularExpression(@"^(.+)@(.+)$", ErrorMessage = "Email is invalid")]
     public Email Email { get; set; }
-
 
     [JsonConverter(typeof(StringEnumConverter))]
     public CustomerStatus Status { get; set; }
