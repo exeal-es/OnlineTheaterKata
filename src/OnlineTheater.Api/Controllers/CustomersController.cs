@@ -82,11 +82,9 @@ public class CustomersController : ControllerBase
                 return BadRequest("Email is already in use: " + item.Email);
             }
 
-            Customer customer = new(item.Name)
+            var customer = new Customer(item.Name)
             {
                 Email = email,
-                Status = CustomerStatus.Regular,
-                StatusExpirationDate = null,
                 Id = 0
             };
             _customerRepository.Add(customer);
@@ -186,7 +184,7 @@ public class CustomersController : ControllerBase
                 return BadRequest("The customer already has the Advanced status");
             }
 
-            bool success = _customerService.PromoteCustomer(customer);
+            bool success = customer.Promote();
             if (!success)
             {
                 return BadRequest("Cannot promote the customer");

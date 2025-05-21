@@ -45,20 +45,4 @@ public class CustomerService(MovieService movieService)
         customer.PurchasedMovies.Add(purchasedMovie);
         customer.MoneySpent += price;
     }
-
-    public bool PromoteCustomer(Customer customer)
-    {
-        // at least 2 active movies during the last 30 days
-        if (customer.PurchasedMovies.Count(x => x.ExpirationDate == null || x.ExpirationDate.Value >= DateTime.UtcNow.AddDays(-30)) < 2)
-            return false;
-
-        // at least 100 dollars spent during the last year
-        if (customer.PurchasedMovies.Where(x => x.PurchaseDate > DateTime.UtcNow.AddYears(-1)).Sum(x => x.Price) < 100m)
-            return false;
-
-        customer.Status = CustomerStatus.Advanced;
-        customer.StatusExpirationDate = DateTime.UtcNow.AddYears(1);
-
-        return true;
-    }
 }
