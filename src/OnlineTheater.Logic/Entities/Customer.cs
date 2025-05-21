@@ -20,6 +20,7 @@ public class Customer : Entity
         Email = email;
         Status = CustomerStatus.Regular;
         StatusExpirationDate = null;
+        PurchasedMovies = [];
     }
 
     public string Name { get; protected set; }
@@ -32,7 +33,7 @@ public class Customer : Entity
 
     public decimal MoneySpent { get; set; }
 
-    public List<PurchasedMovie> PurchasedMovies { get; set; } = [];
+    public List<PurchasedMovie> PurchasedMovies { get; init; }
 
     public void UpdateName(string name)
     {
@@ -56,5 +57,23 @@ public class Customer : Entity
         StatusExpirationDate = DateTime.UtcNow.AddYears(1);
 
         return true;
+    }
+
+    public void Purchase(Movie movie)
+    {
+        DateTime? expirationDate = movie.GetExpirationDate();
+        
+        decimal price = movie.CalculatePrice(this);
+
+        var purchasedMovie = new PurchasedMovie
+        {
+            MovieId = movie.Id,
+            CustomerId = Id,
+            ExpirationDate = expirationDate,
+            Price = price
+        };
+
+        PurchasedMovies.Add(purchasedMovie);
+        MoneySpent += price;
     }
 }

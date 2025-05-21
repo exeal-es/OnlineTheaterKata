@@ -2,32 +2,21 @@
 using OnlineTheater.Api.Models;
 using OnlineTheater.Logic.Entities;
 using OnlineTheater.Logic.Repositories;
-using OnlineTheater.Logic.Services;
 using CSharpFunctionalExtensions;
 
 namespace OnlineTheater.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class CustomersController : ControllerBase
+public class CustomersController(MovieRepository movieRepository, CustomerRepository customerRepository)
+    : ControllerBase
 {
-    private readonly MovieRepository _movieRepository;
-    private readonly CustomerRepository _customerRepository;
-    private readonly CustomerService _customerService;
-
-    public CustomersController(MovieRepository movieRepository, CustomerRepository customerRepository, CustomerService customerService)
-    {
-        _customerRepository = customerRepository;
-        _movieRepository = movieRepository;
-        _customerService = customerService;
-    }
-
     [HttpGet("{id}")]
     [ProducesResponseType(typeof(Customer), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public ActionResult<CustomerDto> Get(long id)
     {
-        Customer customer = _customerRepository.GetById(id);
+        Customer customer = customerRepository.GetById(id);
         if (customer == null)
         {
             return NotFound();
@@ -47,7 +36,7 @@ public class CustomersController : ControllerBase
     [ProducesResponseType(typeof(IReadOnlyList<CustomerBasicDto>), StatusCodes.Status200OK)]
     public ActionResult<IReadOnlyList<CustomerBasicDto>> GetList()
     {
-        IReadOnlyList<Customer> customers = _customerRepository.GetList();
+        IReadOnlyList<Customer> customers = customerRepository.GetList();
 
         var customersdtos = customers
             .Select(x => new CustomerBasicDto(x.Id, x.Name, x.Email.Valor, (CustomerStatusDto)x.Status, x.StatusExpirationDate, x.MoneySpent))
@@ -77,14 +66,14 @@ public class CustomersController : ControllerBase
 
             Email email = emailResult.Value;
 
-            if (_customerRepository.GetByEmail(email) != null)
+            if (customerRepository.GetByEmail(email) != null)
             {
                 return BadRequest("Email is already in use: " + item.Email);
             }
 
             var customer = new Customer(item.Name, email);
-            _customerRepository.Add(customer);
-            _customerRepository.SaveChanges();
+            customerRepository.Add(customer);
+            customerRepository.SaveChanges();
 
             return Ok();
         }
@@ -107,14 +96,14 @@ public class CustomersController : ControllerBase
                 return BadRequest(ModelState);
             }
 
-            Customer customer = _customerRepository.GetById(id);
+            Customer customer = customerRepository.GetById(id);
             if (customer == null)
             {
                 return BadRequest("Invalid customer id: " + id);
             }
 
             customer.UpdateName(item.Name);
-            _customerRepository.SaveChanges();
+            customerRepository.SaveChanges();
 
             return Ok();
         }
@@ -132,13 +121,13 @@ public class CustomersController : ControllerBase
     {
         try
         {
-            Movie movie = _movieRepository.GetById(movieId);
+            Movie movie = movieRepository.GetById(movieId);
             if (movie == null)
             {
                 return BadRequest("Invalid movie id: " + movieId);
             }
 
-            Customer customer = _customerRepository.GetById(id);
+            Customer customer = customerRepository.GetById(id);
             if (customer == null)
             {
                 return BadRequest("Invalid customer id: " + id);
@@ -149,9 +138,9 @@ public class CustomersController : ControllerBase
                 return BadRequest("The movie is already purchased: " + movie.Name);
             }
 
-            _customerService.PurchaseMovie(customer, movie);
+            customer.Purchase(movie);
 
-            _customerRepository.SaveChanges();
+            customerRepository.SaveChanges();
 
             return Ok();
         }
@@ -169,7 +158,7 @@ public class CustomersController : ControllerBase
     {
         try
         {
-            Customer customer = _customerRepository.GetById(id);
+            Customer customer = customerRepository.GetById(id);
             if (customer == null)
             {
                 return BadRequest("Invalid customer id: " + id);
@@ -186,7 +175,7 @@ public class CustomersController : ControllerBase
                 return BadRequest("Cannot promote the customer");
             }
 
-            _customerRepository.SaveChanges();
+            customerRepository.SaveChanges();
 
             return Ok();
         }

@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using OnlineTheater.Logic.Data;
 using OnlineTheater.Logic.Repositories;
-using OnlineTheater.Logic.Services;
 
 namespace OnlineTheater.Api;
 
@@ -22,8 +21,6 @@ public class Program
         // Add application services
         builder.Services.AddTransient<MovieRepository>();
         builder.Services.AddTransient<CustomerRepository>();
-        builder.Services.AddTransient<MovieService>();
-        builder.Services.AddTransient<CustomerService>();
 
         var app = builder.Build();
 
