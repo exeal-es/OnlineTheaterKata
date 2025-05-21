@@ -82,11 +82,7 @@ public class CustomersController : ControllerBase
                 return BadRequest("Email is already in use: " + item.Email);
             }
 
-            var customer = new Customer(item.Name)
-            {
-                Email = email,
-                Id = 0
-            };
+            var customer = new Customer(item.Name, email);
             _customerRepository.Add(customer);
             _customerRepository.SaveChanges();
 

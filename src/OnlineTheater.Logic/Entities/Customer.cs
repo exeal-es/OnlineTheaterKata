@@ -1,6 +1,3 @@
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-
 namespace OnlineTheater.Logic.Entities;
 
 public class Customer : Entity
@@ -10,22 +7,24 @@ public class Customer : Entity
         // For EF Core
     }
 
-    public Customer(string name)
+    public Customer(string name, Email email)
     {
         if (name == null)
             throw new ArgumentNullException(nameof(name));
         
         if (name.Length > 100)
             throw new ArgumentException("Name is too long", nameof(name));
-        
+
+        Id = 0;
         Name = name;
+        Email = email;
         Status = CustomerStatus.Regular;
         StatusExpirationDate = null;
     }
 
     public string Name { get; protected set; }
 
-    public Email Email { get; set; }
+    public Email Email { get; protected set; }
 
     public CustomerStatus Status { get; protected set; }
 
