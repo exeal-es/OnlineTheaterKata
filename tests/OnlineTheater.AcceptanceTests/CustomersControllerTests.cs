@@ -133,7 +133,11 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
 
         // Act - Get all customers
         var getAllResponse = await _client.GetAsync("/api/customers");
-        getAllResponse.EnsureSuccessStatusCode();
+        if (!getAllResponse.IsSuccessStatusCode)
+        {
+            var error = await getAllResponse.Content.ReadAsStringAsync();
+            throw new Exception($"Server error: {error}");
+        }
         var customers = await getAllResponse.Content.ReadFromJsonAsync<List<CustomerBasicDto>>();
 
         // Assert

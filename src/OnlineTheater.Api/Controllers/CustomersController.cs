@@ -82,9 +82,8 @@ public class CustomersController : ControllerBase
                 return BadRequest("Email is already in use: " + item.Email);
             }
 
-            Customer customer = new()
+            Customer customer = new(item.Name)
             {
-                Name = item.Name,
                 Email = email,
                 Status = CustomerStatus.Regular,
                 StatusExpirationDate = null,
@@ -120,7 +119,7 @@ public class CustomersController : ControllerBase
                 return BadRequest("Invalid customer id: " + id);
             }
 
-            customer.Name = item.Name;
+            customer.UpdateName(item.Name);
             _customerRepository.SaveChanges();
 
             return Ok();

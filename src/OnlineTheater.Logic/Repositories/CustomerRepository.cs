@@ -9,15 +9,6 @@ public class CustomerRepository(OnlineTheaterDbContext context)
     public IReadOnlyList<Customer> GetList()
     {
         return context.Customers
-            .Select(x => new Customer
-            {
-                Id = x.Id,
-                Name = x.Name,
-                Email = x.Email,
-                Status = x.Status,
-                StatusExpirationDate = x.StatusExpirationDate,
-                MoneySpent = x.MoneySpent
-            })
             .ToList();
     }
 
